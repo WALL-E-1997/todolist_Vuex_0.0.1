@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="css/ToDoList.css">
+    <script src="js/vue.js"></script>
+    <script src="js/vuex.js"></script>
+</head>
+<body>
+<div id="root">
+    <header>
+        <section>
+            <label for="title">ToDoList</label>
+            <input type="text" id="title" name="title" placeholder="添加ToDo" required="required" autocomplete="off"
+                   @keyDown="handleInput" v-model="userInput"/>
+        </section>
+    </header>
+    <section>
+        <h2>正在进行 <span id="todocount">{{this.$store.getters.undoneCount}}</span></h2>
+        <ol id="todolist" class="demo-box">
+            <undone v-for="(item,index) of this.$store.state.undone" :text="item.text" :index="index" :key="item.id"></undone>
+        </ol>
+        <h2>已经完成 <span id="donecount">{{this.$store.getters.doneCount}}</span></h2>
+        <ul id="donelist">
+            <done v-for="(item,index) of this.$store.state.done" :text="item.text" :index="index" :key="item.id"></done>
+        </ul>
+    </section>
+</div>
+<footer>
+    Copyright &copy; 2014 todolist.cn
+</footer>
+</body>
+    <script>
+        const store = new Vuex.Store({
+            state:{
+                undone:[],
+                done:[],
+                num:0
+            },
+            getters:{
+                undoneCount:state => state.undone.length,
+                doneCount:state => state.done.length,
+            },
+            mutations:{
+                addList(state,txt){
+                    state.undone.push({text:txt,state:false,id:state.num});
+                    state.num += 1;
+                    console.log(state.num);
+                },
+                undone(state,i){
+                    state.done.push({text:state.undone[i].text,state:true});
+                    state.undone.splice(i,1);
+                },
+                done(state,i){
+                    state.undone.push({text:state.done[i].text,state:false});
+                    state.done.splice(i,1);
+                },
+                removeUndone(state,i){
+                    state.undone.splice(i,1);
+                },
+                removeDone(state,i){
+                    state.done.splice(i,1);
+                }
+            }
+        })
+        let undoneItem = {
+            props:['text','index'],
+            store:store,
+            template:`<li>
+                    <input type= 'checkbox' name= '' id= '' @click="handleUndoneClick" ref="input">
+                    <p>{{text}}</p>
+                    <a href='javascript:;' @click="handleRemoveUndone">-</a>
+                    </li>`,
+            methods: {
+                handleUndoneClick:function () {
+                    store.commit("undone",this.index)
+                },
+                handleRemoveUndone:function () {
+                    store.commit("removeUndone",this.index)
+                }
+            }
+        }
+        let doneItem = {
+            props:['text','index'],
+            store:store,
+            template:`<li>
+                    <input type= 'checkbox' name= '' id= '' @click="handleDoneClick" checked>
+                    <p>{{text}}</p>
+                    <a href='javascript:;' @click="handleRemoveDone">-</a>
+                    </li>`,
+            methods: {
+                handleDoneClick:function () {
+                    store.commit("done",this.index)
+                },
+                handleRemoveDone:function () {
+                    store.commit("removeDone",this.index)
+                }
+            }
+        }
+        let vm = new Vue({
+            el:"#root",
+            store:store,
+            data:{
+                msg:"Hello!",
+                userInput:""
+            },
+            components:{
+                undone:undoneItem,
+                done:doneItem
+            },
+            methods:{
+                handleInput:function (e) {
+                    if(e.keyCode===13){
+                        this.$store.commit("addList",this.userInput);
+                        this.userInput = "";
+                    }
+                }
+            }
+        })
+
+    </script>
+</html>
